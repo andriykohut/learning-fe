@@ -1,6 +1,6 @@
 import uuidv4 from 'uuid/v4';
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import { Button, List, Form, TextArea, Icon, Item } from 'semantic-ui-react';
 import './App.css';
 
 class CreateForm extends Component {
@@ -11,29 +11,32 @@ class CreateForm extends Component {
   }
 
   handleChange = (event, target) => {
-    const state = {};
-    state[target] = event.target.value;
-    this.setState(state);
+    this.setState({[target]: event.target.value});
   }
 
 
-  handleSubmit = (event) => {
+  handleSubmit = event => {
     event.preventDefault();
     this.props.onSubmit(Object.assign({}, this.state));
   }
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <label>Title:
+      <Form onSubmit={this.handleSubmit}>
+        <Form.Field>
+          <label>Title:</label>
           <input key="title" type="text" value={this.state.title} onChange={e => this.handleChange(e, "title")} />
-        </label>
-        <label>Text:
-          <input key="text" type="text" value={this.state.text} onChange={e => this.handleChange(e, "text")} />
-        </label>
-        <input type="submit" value="Create post" />
-        <button onClick={this.props.onCancel}>Cancel</button>
-      </form>
+        </Form.Field>
+        <Form.Field>
+          <label>Text:</label>
+          <TextArea key="text" value={this.state.text} onChange={e => this.handleChange(e, "text")} />
+        </Form.Field>
+        <Button.Group>
+          <Button positive>Save</Button>
+          <Button.Or/>
+          <Button onClick={this.props.onCancel}>Cancel</Button>
+        </Button.Group>
+      </Form>
     );
   }
 }
@@ -46,28 +49,47 @@ class App extends Component {
       createFormVisible: false,
     }
   }
+  handleDelete = id => {
+    const posts = Object.assign({}, this.state.posts);
+    delete posts[id];
+    this.setState({
+      posts: posts,
+    });
+  }
   handleSubmit = post => {
-    const newPost = {post.id: {post.title, post.text}};
+    const newPost = {[post.id]: {title: post.title, text: post.text}};
     this.setState({
       posts: Object.assign({}, this.state.posts, newPost),
       createFormVisible: false,
     })
   }
   renderPosts = () => {
-    return this.state.posts.map((id, post) => {
+    const items =  Object.entries(this.state.posts).map(entries => {
+      let [id, post] = entries;
       return (
-        <div key={id}>
-          <div>{post.title}</div>
-          <div>{post.text}</div>
-        </div>
+        <Item.Group key={id}>
+          <Item>
+            <Item.Content>
+              <Item.Header>{post.title}</Item.Header>
+              <Item.Description>{post.text}</Item.Description>
+              <Button icon onClick={() => this.handleDelete(id)}>
+                <Icon name="delete" />
+              </Button>
+            </Item.Content>
+          </Item>
+        </Item.Group>
       );
     });
+    return (
+      <List selection>
+        {items}
+      </List>
+    );
   }
   render() {
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
           <h1 className="App-title">Blog</h1>
         </header>
         {this.state.createFormVisible ?
@@ -75,7 +97,7 @@ class App extends Component {
             onSubmit={this.handleSubmit}
             onCancel={() => this.setState({createFormVisible: false})}
           /> :
-          <button onClick={() => this.setState({createFormVisible: true})}>+</button>}
+          <Button onClick={() => this.setState({createFormVisible: true})}>+</Button>}
         {this.renderPosts()}
       </div>
     );
